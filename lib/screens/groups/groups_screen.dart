@@ -18,7 +18,15 @@ class GroupsScreen extends StatelessWidget {
     final groups = context.watch<GroupProvider>().groups;
 
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Grupos SENATI - AULA PUNTOS', showBackButton: true),
+      appBar: CustomAppBar(
+        title: 'Grupos SENATI - AULA PUNTOS',
+        showBackButton: true,
+        onBackPressed: () {
+          context.read<NavigationProvider>().setIndex(0);
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+        },
+      ),
       bottomNavigationBar: MainNavigation(
         onTap: (index) {
           context.read<NavigationProvider>().setIndex(index);

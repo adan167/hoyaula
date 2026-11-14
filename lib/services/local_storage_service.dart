@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -15,7 +16,7 @@ import '../models/student_model.dart';
 
 class LocalStorageService {
   static const String _databaseName = 'aula_puntos.db';
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 3;
   static const String _legacyMigrationKey = 'sqlite_migration_v1_complete';
   static const String _legacyGroupsKey = 'senati_groups';
   static const String _legacyStudentsKey = 'senati_students_by_group';
@@ -36,6 +37,7 @@ class LocalStorageService {
     final preferences = await SharedPreferences.getInstance();
     final legacyData = await _readLegacyData(preferences);
     if (!_ffiConfigured &&
+        !kIsWeb &&
         (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
@@ -48,6 +50,11 @@ class LocalStorageService {
         await database.execute('PRAGMA foreign_keys = OFF');
       },
       onCreate: _createSchema,
+      onUpgrade: (database, oldVersion, newVersion) async {
+        if (oldVersion < 3) {
+          await _removeUnchangedSampleAttendance(database);
+        }
+      },
     );
 
     if (inMemory) {
@@ -55,6 +62,9 @@ class LocalStorageService {
         inMemoryDatabasePath,
         options: options,
       );
+    } else if (kIsWeb) {
+      final resolvedPath = databasePath ?? _databaseName;
+      _database = await openDatabase(resolvedPath, options: options);
     } else {
       final resolvedPath =
           databasePath ?? path.join(await getDatabasesPath(), _databaseName);
@@ -208,25 +218,31 @@ class LocalStorageService {
         }
       }
 
-      if (await _rowCount(transaction, 'attendance') == 0) {
-        final attendance = buildAttendanceBySession();
-        for (final entry in attendance.entries) {
-          for (final status in entry.value.entries) {
-            await transaction.insert('attendance', {
-              'sessionId': entry.key,
-              'studentId': status.key,
-              'status': status.value.name,
-            });
-          }
-        }
-      }
-
       if (await _rowCount(transaction, 'participation') == 0) {
         for (final record in buildParticipationRecords()) {
           await transaction.insert('participation', _participationRow(record));
         }
       }
     });
+  }
+
+  static Future<void> _removeUnchangedSampleAttendance(
+    DatabaseExecutor database,
+  ) async {
+    final actualRows = await database.query('attendance');
+    final sampleAttendance = buildAttendanceBySession();
+    for (final row in actualRows) {
+      final sessionId = row['sessionId']! as String;
+      final studentId = row['studentId']! as String;
+      final status = row['status']! as String;
+      if (sampleAttendance[sessionId]?[studentId]?.name == status) {
+        await database.delete(
+          'attendance',
+          where: 'sessionId = ? AND studentId = ? AND status = ?',
+          whereArgs: [sessionId, studentId, status],
+        );
+      }
+    }
   }
 
   static Future<int> _rowCount(DatabaseExecutor database, String table) async {

@@ -34,6 +34,14 @@ class SessionsScreen extends StatelessWidget {
             ? 'Sesiones'
             : 'Sesiones: ${selectedGroup.sectionCode}',
         showBackButton: true,
+        onBackPressed: () {
+          context.read<NavigationProvider>().setIndex(0);
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRoutes.home,
+            (route) => false,
+          );
+        },
       ),
       bottomNavigationBar: MainNavigation(
         onTap: (index) {
@@ -101,11 +109,10 @@ class SessionsScreen extends StatelessWidget {
                   onAttendance: () {
                     Navigator.pushNamed(
                       context,
-                      AppRoutes.attendance,
-                      arguments: {
+                      AppRoutes.withParameters(AppRoutes.attendance, {
                         'groupId': selectedGroup.id,
                         'sessionId': session.id,
-                      },
+                      }),
                     );
                   },
                   onParticipation: () {

@@ -200,102 +200,106 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: quickActions.map((item) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: InkWell(
-                        onTap: () {
-                          final route = item['route'] as String;
-                          final groupProvider = context.read<GroupProvider>();
-                          final group =
-                              groupProvider.selectedGroup ??
-                              (groups.isEmpty ? null : groups.first);
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: quickActions.map((item) {
+                  return InkWell(
+                    onTap: () {
+                      final route = item['route'] as String;
+                      final groupProvider = context.read<GroupProvider>();
+                      final group =
+                          groupProvider.selectedGroup ??
+                          (groups.isEmpty ? null : groups.first);
 
-                          if (route == AppRoutes.sessions) {
-                            if (group == null) {
-                              Navigator.pushNamed(context, AppRoutes.groups);
-                            } else {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.sessions,
-                                arguments: {'groupId': group.id},
-                              );
-                            }
-                            return;
-                          }
+                      if (route == AppRoutes.sessions) {
+                        if (group == null) {
+                          Navigator.pushNamed(context, AppRoutes.groups);
+                        } else {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.sessions,
+                            arguments: {'groupId': group.id},
+                          );
+                        }
+                        return;
+                      }
 
-                          if (route == AppRoutes.participation) {
-                            if (group == null) {
-                              Navigator.pushNamed(context, AppRoutes.groups);
-                              return;
-                            }
-                            final sessions = context
-                                .read<SessionProvider>()
-                                .sessionsForGroup(group.id);
-                            if (sessions.isEmpty) {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.sessions,
-                                arguments: {'groupId': group.id},
-                              );
-                            } else {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.participation,
-                                arguments: {
-                                  'groupId': group.id,
-                                  'sessionId': sessions.first.id,
-                                },
-                              );
-                            }
-                            return;
-                          }
+                      if (route == AppRoutes.participation) {
+                        if (group == null) {
+                          Navigator.pushNamed(context, AppRoutes.groups);
+                          return;
+                        }
+                        final sessions = context
+                            .read<SessionProvider>()
+                            .sessionsForGroup(group.id);
+                        if (sessions.isEmpty) {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.sessions,
+                            arguments: {'groupId': group.id},
+                          );
+                        } else {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.participation,
+                            arguments: {
+                              'groupId': group.id,
+                              'sessionId': sessions.first.id,
+                            },
+                          );
+                        }
+                        return;
+                      }
 
-                          Navigator.pushNamed(context, route);
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          width: 180,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(14),
-                            color: AppColors.white,
-                            border: Border.all(color: AppColors.grey),
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 16,
-                                backgroundColor: AppColors.lightBlue,
-                                child: Icon(
-                                  item['icon'] as IconData,
-                                  color: AppColors.primary,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  item['title'] as String,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      Navigator.pushNamed(context, route);
+                    },
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      width: 180,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
                       ),
-                    );
-                  }).toList(),
-                ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        color: AppColors.white,
+                        border: Border.all(color: AppColors.grey, width: 1.2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor: AppColors.lightBlue,
+                            child: Icon(
+                              item['icon'] as IconData,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              item['title'] as String,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ],
           ),

@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/app_colors.dart';
-import '../../models/attendance_model.dart';
 import '../../providers/attendance_provider.dart';
 import '../../providers/group_provider.dart';
 import '../../providers/session_provider.dart';
@@ -100,11 +99,9 @@ class AttendanceScreen extends StatelessWidget {
                       itemCount: students.length,
                       itemBuilder: (context, index) {
                         final student = students[index];
-                        final status =
-                            attendanceProvider.attendanceForSession(
-                              sessionId,
-                            )[student.id] ??
-                            AttendanceStatus.present;
+                        final status = attendanceProvider.attendanceForSession(
+                          sessionId,
+                        )[student.id];
                         return StudentCard(
                           student: student,
                           subtitle: student.institutionalCode,

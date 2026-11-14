@@ -10,7 +10,7 @@ class AttendanceSelector extends StatelessWidget {
     required this.onChanged,
   });
 
-  final AttendanceStatus selectedStatus;
+  final AttendanceStatus? selectedStatus;
   final ValueChanged<AttendanceStatus> onChanged;
 
   @override
@@ -50,8 +50,18 @@ class AttendanceSelector extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(left: 6),
           child: Material(
-            color: isSelected ? item.color : AppColors.grey,
-            borderRadius: BorderRadius.circular(10),
+            color: isSelected
+                ? item.color.withValues(alpha: 0.16)
+                : AppColors.grey,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: isSelected
+                    ? item.color.withValues(alpha: 0.6)
+                    : Colors.transparent,
+                width: 1.2,
+              ),
+            ),
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
               onTap: () => onChanged(item.status),
@@ -62,7 +72,7 @@ class AttendanceSelector extends StatelessWidget {
                   child: Icon(
                     item.icon,
                     size: 14,
-                    color: isSelected ? AppColors.white : AppColors.textPrimary,
+                    color: isSelected ? item.color : AppColors.textPrimary,
                   ),
                 ),
               ),

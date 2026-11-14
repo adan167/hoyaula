@@ -53,16 +53,27 @@ class _ReportsScreenState extends State<ReportsScreen> {
       _selectedStudentId = 'all';
     }
 
-    final filteredStudents = _selectedStudentId == null || _selectedStudentId == 'all'
+    final filteredStudents =
+        _selectedStudentId == null || _selectedStudentId == 'all'
         ? students
-        : students.where((student) => student.id == _selectedStudentId).toList();
+        : students
+              .where((student) => student.id == _selectedStudentId)
+              .toList();
 
     final reportRows = filteredStudents.map((student) {
-      final attendanceMap = attendanceProvider.attendanceForSession(_selectedSessionId ?? '');
-      final attendanceCount = attendanceMap[student.id] == AttendanceStatus.present ? 1 : 0;
-      final tardinessCount = attendanceMap[student.id] == AttendanceStatus.tardy ? 1 : 0;
-      final absenceCount = attendanceMap[student.id] == AttendanceStatus.absent ? 1 : 0;
-      final justifiedCount = attendanceMap[student.id] == AttendanceStatus.justified ? 1 : 0;
+      final attendanceMap = attendanceProvider.attendanceForSession(
+        _selectedSessionId ?? '',
+      );
+      final attendanceCount =
+          attendanceMap[student.id] == AttendanceStatus.present ? 1 : 0;
+      final tardinessCount = attendanceMap[student.id] == AttendanceStatus.tardy
+          ? 1
+          : 0;
+      final absenceCount = attendanceMap[student.id] == AttendanceStatus.absent
+          ? 1
+          : 0;
+      final justifiedCount =
+          attendanceMap[student.id] == AttendanceStatus.justified ? 1 : 0;
       final totalPoints = participationProvider.totalPointsForStudent(
         studentId: student.id,
         sessionId: _selectedSessionId ?? '',
@@ -80,7 +91,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }).toList();
 
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Reportes y exportación', showBackButton: true),
+      appBar: CustomAppBar(
+        title: 'Reportes y exportación',
+        showBackButton: true,
+        onBackPressed: () {
+          context.read<NavigationProvider>().setIndex(0);
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+        },
+      ),
       bottomNavigationBar: MainNavigation(
         onTap: (index) {
           context.read<NavigationProvider>().setIndex(index);
@@ -127,7 +146,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           child: _FilterDropdown(
                             label: 'Grupo',
                             value: _selectedGroupId,
-                            items: groups.map((group) => DropdownMenuItem(value: group.id, child: Text(group.sectionCode))).toList(),
+                            items: groups
+                                .map(
+                                  (group) => DropdownMenuItem(
+                                    value: group.id,
+                                    child: Text(group.sectionCode),
+                                  ),
+                                )
+                                .toList(),
                             onChanged: (value) {
                               setState(() {
                                 _selectedGroupId = value;
@@ -142,7 +168,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             label: 'Sesión',
                             value: _selectedSessionId,
                             items: sessions
-                                .map((session) => DropdownMenuItem(value: session.id, child: Text('Sesión ${session.sessionNumber}')))
+                                .map(
+                                  (session) => DropdownMenuItem(
+                                    value: session.id,
+                                    child: Text(
+                                      'Sesión ${session.sessionNumber}',
+                                    ),
+                                  ),
+                                )
                                 .toList(),
                             onChanged: (value) {
                               setState(() {
@@ -158,8 +191,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       label: 'Estudiante',
                       value: _selectedStudentId,
                       items: [
-                        const DropdownMenuItem(value: 'all', child: Text('Todos')),
-                        ...students.map((student) => DropdownMenuItem(value: student.id, child: Text(student.fullName))),
+                        const DropdownMenuItem(
+                          value: 'all',
+                          child: Text('Todos'),
+                        ),
+                        ...students.map(
+                          (student) => DropdownMenuItem(
+                            value: student.id,
+                            child: Text(student.fullName),
+                          ),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -197,8 +238,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               .map(
                                 (row) => DataRow(
                                   cells: [
-                                    DataCell(Text(row['studentName'] as String)),
-                                    DataCell(Text(row['institutionalCode'] as String)),
+                                    DataCell(
+                                      Text(row['studentName'] as String),
+                                    ),
+                                    DataCell(
+                                      Text(row['institutionalCode'] as String),
+                                    ),
                                     DataCell(Text('${row['totalPoints']}')),
                                     DataCell(Text('${row['attendance']}')),
                                     DataCell(Text('${row['tardiness']}')),
@@ -220,7 +265,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        if (_selectedGroupId != null && _selectedSessionId != null) {
+                        if (_selectedGroupId != null &&
+                            _selectedSessionId != null) {
                           final group = selectedGroup;
                           await PdfService.exportReport(
                             group: group,
@@ -242,7 +288,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        if (_selectedGroupId != null && _selectedSessionId != null) {
+                        if (_selectedGroupId != null &&
+                            _selectedSessionId != null) {
                           await ExcelService.exportReport(
                             rows: reportRows,
                             groupName: selectedGroup.sectionCode,
@@ -258,7 +305,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

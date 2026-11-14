@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
+import 'package:practica_aula/data/mock_data.dart';
 import 'package:practica_aula/models/attendance_model.dart';
 import 'package:practica_aula/models/group_model.dart';
 import 'package:practica_aula/models/session_model.dart';
@@ -13,6 +14,7 @@ import 'package:practica_aula/providers/participation_provider.dart';
 import 'package:practica_aula/providers/session_provider.dart';
 import 'package:practica_aula/services/local_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 
 void main() {
   test(
@@ -26,6 +28,7 @@ void main() {
       try {
         SharedPreferences.setMockInitialValues({});
         await LocalStorageService.init(databasePath: databasePath);
+        expect(LocalStorageService.readAttendanceBySessionSync(), isEmpty);
         final group = GroupModel(
           id: 'group-persistence-test',
           name: 'Persistencia',
@@ -133,6 +136,48 @@ void main() {
       );
       final preferences = await SharedPreferences.getInstance();
       expect(preferences.getString('senati_groups'), isNull);
+    } finally {
+      await LocalStorageService.close();
+      await directory.delete(recursive: true);
+    }
+  });
+
+  test('removes preset sample attendance but keeps changed statuses', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'aula-puntos-attendance-migration-',
+    );
+    final databasePath = path.join(directory.path, 'test.db');
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await LocalStorageService.init(databasePath: databasePath);
+      await LocalStorageService.close();
+
+      final database = await openDatabase(databasePath);
+      final sampleAttendance = buildAttendanceBySession();
+      const changedSessionId = 'session-g1-1';
+      const changedStudentId = 'student-g1-1';
+      for (final session in sampleAttendance.entries) {
+        for (final student in session.value.entries) {
+          await database.insert('attendance', {
+            'sessionId': session.key,
+            'studentId': student.key,
+            'status':
+                session.key == changedSessionId &&
+                    student.key == changedStudentId
+                ? AttendanceStatus.absent.name
+                : student.value.name,
+          });
+        }
+      }
+      await database.execute('PRAGMA user_version = 2');
+      await database.close();
+
+      await LocalStorageService.init(databasePath: databasePath);
+
+      expect(LocalStorageService.readAttendanceBySessionSync(), {
+        changedSessionId: {changedStudentId: AttendanceStatus.absent},
+      });
     } finally {
       await LocalStorageService.close();
       await directory.delete(recursive: true);

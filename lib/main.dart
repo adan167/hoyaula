@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 import 'core/app_routes.dart';
 import 'core/app_theme.dart';
@@ -20,6 +23,9 @@ import 'services/local_storage_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+  }
   await LocalStorageService.init();
   runApp(const AulaPuntosApp());
 }
@@ -55,12 +61,7 @@ class AulaPuntosApp extends StatelessWidget {
               sessionId: _stringArgument(context, 'sessionId') ?? '',
             );
           },
-          AppRoutes.attendance: (context) {
-            return AttendanceScreen(
-              groupId: _stringArgument(context, 'groupId') ?? '',
-              sessionId: _stringArgument(context, 'sessionId') ?? '',
-            );
-          },
+          AppRoutes.attendance: (context) => _buildAttendanceScreen(context),
           AppRoutes.participation: (context) {
             return ParticipationScreen(
               groupId: _stringArgument(context, 'groupId') ?? '',
@@ -69,9 +70,37 @@ class AulaPuntosApp extends StatelessWidget {
           },
           AppRoutes.reports: (_) => const ReportsScreen(),
         },
+        onGenerateRoute: (settings) {
+          final uri = Uri.tryParse(settings.name ?? '');
+          if (uri?.path != AppRoutes.attendance || !uri!.hasQuery) {
+            return null;
+          }
+
+          final parameters = {
+            ...uri.queryParameters,
+            if (settings.arguments is Map)
+              for (final entry in (settings.arguments! as Map).entries)
+                if (entry.key is String && entry.value is String)
+                  entry.key as String: entry.value as String,
+          };
+          return MaterialPageRoute<void>(
+            settings: settings,
+            builder: (context) => AttendanceScreen(
+              groupId: parameters['groupId'] ?? '',
+              sessionId: parameters['sessionId'] ?? '',
+            ),
+          );
+        },
       ),
     );
   }
+}
+
+Widget _buildAttendanceScreen(BuildContext context) {
+  return AttendanceScreen(
+    groupId: _stringArgument(context, 'groupId') ?? '',
+    sessionId: _stringArgument(context, 'sessionId') ?? '',
+  );
 }
 
 String? _stringArgument(BuildContext context, String key) {

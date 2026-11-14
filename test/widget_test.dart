@@ -61,4 +61,67 @@ void main() {
     expect(find.text('No se encontró el grupo o la sesión.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('attendance route restores group and session from its URL', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const AulaPuntosApp());
+
+    tester
+        .state<NavigatorState>(find.byType(Navigator).first)
+        .pushNamed('/attendance?groupId=group-202601&sessionId=session-g1-1');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Asistencia: Sesión 1'), findsOneWidget);
+    expect(find.text('No se encontró el grupo o la sesión.'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sessions back button returns to the home screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const AulaPuntosApp());
+
+    await tester.tap(find.text('Grupos').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cohorte 2026-20'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Accesos Rápidos'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('groups back button returns to the home screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const AulaPuntosApp());
+
+    await tester.tap(find.text('Grupos').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Cohorte 2026-20'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Accesos Rápidos'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('reports back button returns to the home screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const AulaPuntosApp());
+    await tester.tap(find.text('Reportes').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reportes y exportación'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Accesos Rápidos'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

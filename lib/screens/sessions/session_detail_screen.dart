@@ -79,11 +79,10 @@ class SessionDetailScreen extends StatelessWidget {
                           child: ElevatedButton.icon(
                             onPressed: () => Navigator.pushNamed(
                               context,
-                              AppRoutes.attendance,
-                              arguments: {
+                              AppRoutes.withParameters(AppRoutes.attendance, {
                                 'groupId': groupId,
                                 'sessionId': sessionId,
-                              },
+                              }),
                             ),
                             icon: const Icon(Icons.checklist_rtl_rounded),
                             label: const Text('Asistencia'),
